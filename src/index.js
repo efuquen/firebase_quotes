@@ -5,8 +5,7 @@ const fetch = require('node-fetch');
 const MS_IN_SEC = 1000;
 
 const firebaseServiceAccount = config.get('firebase').get('service_account');
-const mashapeKey = config.get('mashape').get('key');
-const quoteApiUrl = config.get('mashape').get('quote_api_url');
+const quoteApiUrl = config.get('quote_api_url');
 
 admin.initializeApp({
   credential: admin.credential.cert(config.util.toObject(firebaseServiceAccount)),
@@ -23,13 +22,14 @@ let previousQuote = null;
 function getQuote() {
   fetch(quoteApiUrl, {
     headers: {
-      'X-Mashape-Key': mashapeKey,
       'Content-Type': 'application/json'
     },
   }).then((res) => res.json())
     .then((json) => {
-      const quoteJson = json[0];
-      delete quoteJson.category;
+      const quoteJson =  {
+          "quote": json[0].content.replace('<p>', '').replace('</p>', ''),
+          "author": json[0].title
+      };
       quoteRef.set(quoteJson);
 
       if(previousQuote != null) {
